@@ -138,6 +138,7 @@ public class ChooserDetailFragment extends Fragment
         sComponentToId.put(ThemesColumns.MODIFIES_OVERLAYS, R.id.chk_overlays);
         sComponentToId.put(ThemesColumns.MODIFIES_STATUS_BAR, R.id.chk_status_bar);
         sComponentToId.put(ThemesColumns.MODIFIES_NAVIGATION_BAR, R.id.chk_nav_bar);
+        sComponentToId.put(ThemesColumns.MODIFIES_STATUSBAR_HEADERS, R.id.chk_status_bar_headers);
         sComponentToId.put(ThemesColumns.MODIFIES_BOOT_ANIM, R.id.chk_boot_anims);
         sComponentToId.put(ThemesColumns.MODIFIES_FONTS, R.id.chk_fonts);
         sComponentToId.put(ThemesColumns.MODIFIES_ICONS, R.id.chk_icons);
@@ -656,7 +657,6 @@ public class ChooserDetailFragment extends Fragment
             if (mSupportedComponents.contains(ThemesColumns.MODIFIES_NAVIGATION_BAR)) {
                 mPreviewList.remove(ThemesColumns.MODIFIES_NAVIGATION_BAR);
             }
-
             // Sort supported components so that the previews are more reasonable
             Collections.sort(mPreviewList, new PreviewComparator());
 
@@ -680,6 +680,8 @@ public class ChooserDetailFragment extends Fragment
             } else if (component.equals(ThemesColumns.MODIFIES_OVERLAYS)) {
                 fragment = WallpaperAndIconPreviewFragment.newInstance(mStyleImagePath, mPkgName,
                         false);
+            } else if (component.equals(ThemesColumns.MODIFIES_STATUSBAR_HEADERS)) {
+                fragment = HeadersPreviewFragment.newInstance(mPkgName);
             } else if (component.equals(ThemesColumns.MODIFIES_BOOT_ANIM)) {
                 fragment = BootAniPreviewFragment.newInstance(mPkgName);
             } else if (component.equals(ThemesColumns.MODIFIES_FONTS)) {
@@ -711,6 +713,7 @@ public class ChooserDetailFragment extends Fragment
                 ThemesColumns.MODIFIES_LAUNCHER,
                 ThemesColumns.MODIFIES_OVERLAYS,
                 ThemesColumns.MODIFIES_LOCKSCREEN,
+                ThemesColumns.MODIFIES_STATUSBAR_HEADERS,
                 ThemesColumns.MODIFIES_FONTS,
                 ThemesColumns.MODIFIES_ICONS,
                 ThemesColumns.MODIFIES_BOOT_ANIM,

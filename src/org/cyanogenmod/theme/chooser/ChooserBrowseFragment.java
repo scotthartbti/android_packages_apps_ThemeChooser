@@ -15,6 +15,7 @@
  */
 package org.cyanogenmod.theme.chooser;
 
+import android.app.ActivityManager;
 import android.content.ActivityNotFoundException;
 import android.os.Build;
 import android.view.Gravity;
@@ -32,6 +33,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -45,6 +47,7 @@ import android.support.v4.widget.CursorAdapter;
 import android.support.v7.widget.CardView;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.LruCache;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -86,6 +89,7 @@ public class ChooserBrowseFragment extends Fragment
     public AbsListView mListView;
     public LocalPagerAdapter mAdapter;
     public ArrayList<String> mComponentFilters;
+    public LruCache<String, Bitmap> mHeaderCache;
 
     private Point mMaxImageSize = new Point(); //Size of preview image in listview
 
@@ -127,6 +131,7 @@ public class ChooserBrowseFragment extends Fragment
         Display display = getActivity().getWindowManager().getDefaultDisplay();
         display.getSize(mMaxImageSize);
         mMaxImageSize.y  = (int) getActivity().getResources().getDimension(R.dimen.item_browse_height);
+        mMaxImageSize.x  = (int) getActivity().getResources().getDimension(R.dimen.item_browse_width);
 
         return v;
     }
@@ -135,6 +140,19 @@ public class ChooserBrowseFragment extends Fragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        // Get memory class of this device, exceeding this amount will throw an
+        // OutOfMemory exception.
+        final int memClass = ((ActivityManager) getActivity().getSystemService(
+                Context.ACTIVITY_SERVICE))
+                .getMemoryClass();
+        // Use 1/8th of the available memory for this memory cache.
+        final int cacheSize = 1024 * 1024 * memClass / 8;
+        mHeaderCache = new LruCache<String, Bitmap>(cacheSize) {
+            protected int sizeOf(String key, Bitmap bitmap) {
+                // The cache size will be measured in bytes rather than number of items.
+                return bitmap.getByteCount();
+            }
+        };
     }
 
     @Override
@@ -278,6 +296,8 @@ public class ChooserBrowseFragment extends Fragment
             } else if (mFilters.contains(ThemesColumns.MODIFIES_ICONS)) {
                 bindDefaultView(item, pkgName, hsImagePath);
                 bindIconView(view, context, pkgName);
+            } else if (mFilters.contains(ThemesColumns.MODIFIES_STATUSBAR_HEADERS)) {
+                bindHeadersView(view, context, pkgName);
             } else {
                 bindDefaultView(item, pkgName, hsImagePath);
             }
@@ -340,6 +360,27 @@ public class ChooserBrowseFragment extends Fragment
             loadImageTask.execute();
         }
 
+        public void bindHeadersView(View view, Context context, String pkgName) {
+            HeadersItemHolder item = (HeadersItemHolder) view.getTag();
+            item.header1.setBackground(new BitmapDrawable(fetchOrGetBitmap(context, pkgName,
+                    ThemesContract.PreviewColumns.HEADER_PREVIEW_1)));
+        }
+
+        private Bitmap fetchOrGetBitmap(Context context, String packageName, String column) {
+            Bitmap b;
+            String key = getHeaderKey(packageName, column);
+            b = mHeaderCache.get(key);
+            if (b == null) {
+                b = Utils.getPreviewBitmap(context, packageName, column);
+                mHeaderCache.put(key, b);
+            }
+            return b;
+        }
+
+        private String getHeaderKey(String pkg, String column) {
+            return pkg + "_" + column;
+        }
+
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
             if (mComponentFilters.isEmpty()) {
@@ -348,6 +389,8 @@ public class ChooserBrowseFragment extends Fragment
                 return newFontView(context, cursor, parent);
             } else if (mComponentFilters.contains(ThemesColumns.MODIFIES_ICONS)) {
                 return newDefaultView(context, cursor, parent);
+            } else if (mComponentFilters.contains(ThemesColumns.MODIFIES_STATUSBAR_HEADERS)) {
+                return newHeadersView(context, cursor, parent);
             }
             return newDefaultView(context, cursor, parent);
         }
@@ -374,6 +417,19 @@ public class ChooserBrowseFragment extends Fragment
             FontItemHolder item = new FontItemHolder();
             item.textView = (TextView) row.findViewById(R.id.text1);
             item.textViewBold = (TextView) row.findViewById(R.id.text2);
+            item.title = (TextView) row.findViewById(R.id.title);
+            item.author = (TextView) row.findViewById(R.id.author);
+            item.designedFor = (TextView) row.findViewById(R.id.designed_for);
+            row.setTag(item);
+            row.findViewById(R.id.theme_card).setClipToOutline(true);
+            return row;
+        }
+
+        private View newHeadersView(Context context, Cursor cursor, ViewGroup parent) {
+            LayoutInflater inflater = LayoutInflater.from(mContext);
+            View row = inflater.inflate(R.layout.item_chooser_browse_headers, parent, false);
+            HeadersItemHolder item = new HeadersItemHolder();
+            item.header1 = (ImageView) row.findViewById(R.id.header1);
             item.title = (TextView) row.findViewById(R.id.title);
             item.author = (TextView) row.findViewById(R.id.author);
             item.designedFor = (TextView) row.findViewById(R.id.designed_for);
@@ -412,6 +468,10 @@ public class ChooserBrowseFragment extends Fragment
     public static class FontItemHolder extends ThemeItemHolder {
         TextView textView;
         TextView textViewBold;
+    }
+
+    public static class HeadersItemHolder extends ThemeItemHolder {
+        ImageView header1;
     }
 
     public class LoadImage extends AsyncTask<Object, Void, Bitmap> {

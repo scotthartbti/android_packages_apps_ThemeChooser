@@ -22,6 +22,11 @@
         app:components="mods_fonts"
         app:icon="@drawable/ic_themes_fonts" />
     <DrawerItem
+        app:id="@+id/headers"
+        app:title="@string/status_bar_headers"
+        app:components="mods_statusbar_headers"
+        app:icon="@drawable/ic_themes_headers" />
+    <DrawerItem
         app:id="@+id/wallpaper"
         app:title="@string/wallpapers"
         app:components="mods_homescreen"

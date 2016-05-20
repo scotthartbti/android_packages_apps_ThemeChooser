@@ -50,6 +50,8 @@
 
     <color name="theme_accent">#4CAF50</color>
 
+    <color name="designed_for_color">#ff8888</color>
+
     <!-- Drawer -->
     <color name="drawer_icon">#616161</color>
     <color name="drawer_item_textcolor">@color/black</color>
