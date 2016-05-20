@@ -88,30 +88,38 @@ public class HeadersPreviewFragment extends Fragment {
     public class AsyncHeaderLoaderTask extends AsyncTask<String, Void, Void> {
         @Override
         protected Void doInBackground(String... params) {
-            String packageName = params[0];
-            mMemoryCache.put(ThemesContract.PreviewColumns.HEADER_PREVIEW_1,
-                    Utils.getPreviewBitmap(getContext(), packageName,
-                            ThemesContract.PreviewColumns.HEADER_PREVIEW_1));
-            mMemoryCache.put(ThemesContract.PreviewColumns.HEADER_PREVIEW_2,
-                    Utils.getPreviewBitmap(getContext(), packageName,
-                            ThemesContract.PreviewColumns.HEADER_PREVIEW_2));
-            mMemoryCache.put(ThemesContract.PreviewColumns.HEADER_PREVIEW_3,
-                    Utils.getPreviewBitmap(getContext(), packageName,
-                            ThemesContract.PreviewColumns.HEADER_PREVIEW_3));
+            try {
+                String packageName = params[0];
+                mMemoryCache.put(ThemesContract.PreviewColumns.HEADER_PREVIEW_1,
+                        Utils.getPreviewBitmap(getContext(), packageName,
+                                ThemesContract.PreviewColumns.HEADER_PREVIEW_1));
+                mMemoryCache.put(ThemesContract.PreviewColumns.HEADER_PREVIEW_2,
+                        Utils.getPreviewBitmap(getContext(), packageName,
+                                ThemesContract.PreviewColumns.HEADER_PREVIEW_2));
+                mMemoryCache.put(ThemesContract.PreviewColumns.HEADER_PREVIEW_3,
+                        Utils.getPreviewBitmap(getContext(), packageName,
+                                ThemesContract.PreviewColumns.HEADER_PREVIEW_3));
+            } catch (Exception e) {
+                // lazy handling until we get stronger loading/caching
+            }
             return null;
         }
 
         @Override
         protected void onPostExecute(Void voidz) {
-            if (mHeader1 != null)
-                mHeader1.setBackground(new BitmapDrawable(mMemoryCache
-                        .get(ThemesContract.PreviewColumns.HEADER_PREVIEW_1)));
-            if (mHeader2 != null)
-                mHeader2.setBackground(new BitmapDrawable(mMemoryCache
-                        .get(ThemesContract.PreviewColumns.HEADER_PREVIEW_2)));
-            if (mHeader3 != null)
-                mHeader3.setBackground(new BitmapDrawable(mMemoryCache
-                        .get(ThemesContract.PreviewColumns.HEADER_PREVIEW_3)));
+            try {
+                if (mHeader1 != null)
+                    mHeader1.setBackground(new BitmapDrawable(mMemoryCache
+                            .get(ThemesContract.PreviewColumns.HEADER_PREVIEW_1)));
+                if (mHeader2 != null)
+                    mHeader2.setBackground(new BitmapDrawable(mMemoryCache
+                            .get(ThemesContract.PreviewColumns.HEADER_PREVIEW_2)));
+                if (mHeader3 != null)
+                    mHeader3.setBackground(new BitmapDrawable(mMemoryCache
+                            .get(ThemesContract.PreviewColumns.HEADER_PREVIEW_3)));
+            } catch (Exception e) {
+                // lazy handling until we get stronger loading/caching
+            }
         }
     }
 }

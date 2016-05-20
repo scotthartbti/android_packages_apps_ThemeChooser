@@ -362,17 +362,30 @@ public class ChooserBrowseFragment extends Fragment
 
         public void bindHeadersView(View view, Context context, String pkgName) {
             HeadersItemHolder item = (HeadersItemHolder) view.getTag();
-            item.header1.setBackground(new BitmapDrawable(fetchOrGetBitmap(context, pkgName,
-                    ThemesContract.PreviewColumns.HEADER_PREVIEW_1)));
+            Bitmap b = fetchOrGetBitmap(context, pkgName,
+                    ThemesContract.PreviewColumns.HEADER_PREVIEW_1);
+            if (b != null) {
+                item.header1.setBackground(new BitmapDrawable(b));
+            }
         }
 
         private Bitmap fetchOrGetBitmap(Context context, String packageName, String column) {
-            Bitmap b;
+            Bitmap b = null;
             String key = getHeaderKey(packageName, column);
-            b = mHeaderCache.get(key);
+            try {
+                b = mHeaderCache.get(key);
+            } catch (Exception e) {
+                // do nothing it hasn't been cached yet
+            }
             if (b == null) {
-                b = Utils.getPreviewBitmap(context, packageName, column);
-                mHeaderCache.put(key, b);
+                try {
+                    b = Utils.getPreviewBitmap(context, packageName, column);
+                } catch (Exception e) {
+                    // ThemeProvider is still processing
+                }
+                if (b != null) {
+                    mHeaderCache.put(key, b);
+                }
             }
             return b;
         }
