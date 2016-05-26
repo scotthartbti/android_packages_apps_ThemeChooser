@@ -17,9 +17,13 @@ package org.cyanogenmod.theme.chooser;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -33,10 +37,47 @@ import android.widget.ListView;
 import android.widget.Toast;
 import android.widget.Toolbar;
 
+import cyanogenmod.providers.ThemesContract.ThemesColumns;
+
 public class ChooserActivity extends FragmentActivity implements DrawerAdapter.DrawerClickListener {
     public static final String TAG = ChooserActivity.class.getName();
     public static final String EXTRA_COMPONENT_FILTER = "component_filter";
     public static final String EXTRA_PKGNAME = "pkgName";
+    public static final String EXTRA_TITLE = "title";
+
+    private static final HashMap<String, Integer> sTitles = new HashMap<String, Integer>();
+    static {
+        sTitles.put(ThemesColumns.MODIFIES_LOCKSCREEN, R.string.lock_screen);
+        sTitles.put(ThemesColumns.MODIFIES_ICONS, R.string.icons);
+        sTitles.put(ThemesColumns.MODIFIES_FONTS, R.string.fonts);
+        sTitles.put(ThemesColumns.MODIFIES_LAUNCHER, R.string.wallpapers);
+        sTitles.put(ThemesColumns.MODIFIES_BOOT_ANIM, R.string.boot_anims);
+        sTitles.put(ThemesColumns.MODIFIES_ALARMS, R.string.sounds);
+        sTitles.put(ThemesColumns.MODIFIES_NOTIFICATIONS, R.string.sounds);
+        sTitles.put(ThemesColumns.MODIFIES_RINGTONES, R.string.sounds);
+        sTitles.put(ThemesColumns.MODIFIES_OVERLAYS, R.string.style);
+        sTitles.put(ThemesColumns.MODIFIES_STATUS_BAR, R.string.style);
+        sTitles.put(ThemesColumns.MODIFIES_NAVIGATION_BAR, R.string.style);
+        sTitles.put(ThemesColumns.MODIFIES_STATUSBAR_HEADERS, R.string.status_bar_headers);
+    }
+
+    public static Map<String, Integer> getTitleMap() {
+        return Collections.unmodifiableMap(sTitles);
+    }
+
+    public static String getTitleFromFilterList(Context context, ArrayList<String> filter) {
+        if (filter == null || filter.isEmpty() || !getTitleMap().containsKey(filter.get(0))) {
+            return context.getResources().getString(R.string.app_name);
+        }
+        int res = getTitleMap().get(filter.get(0));
+        String title = null;
+        try {
+            title = context.getResources().getString(res);
+        } catch (Exception e) {
+            title = context.getResources().getString(R.string.app_name);
+        }
+        return title;
+    }
 
     private DrawerAdapter mDrawerAdapter;
 
@@ -111,6 +152,7 @@ public class ChooserActivity extends FragmentActivity implements DrawerAdapter.D
         }
 
         Fragment fragment = null;
+        String title = getTitleFromFilterList(this, filtersList);
         if (Intent.ACTION_MAIN.equals(intent.getAction()) && intent.hasExtra(EXTRA_PKGNAME)) {
             String pkgName = intent.getStringExtra(EXTRA_PKGNAME);
             fragment = ChooserDetailFragment.newInstance(pkgName, filtersList);
@@ -119,13 +161,13 @@ public class ChooserActivity extends FragmentActivity implements DrawerAdapter.D
             try {
                 final PackageManager pm = getPackageManager();
                 if (pm.getPackageInfo(pkgName, 0) == null) {
-                    fragment = ChooserBrowseFragment.newInstance(filtersList);
+                    fragment = ChooserBrowseFragment.newInstance(filtersList, title);
                 }
             } catch (PackageManager.NameNotFoundException e) {
-                fragment = ChooserBrowseFragment.newInstance(filtersList);
+                fragment = ChooserBrowseFragment.newInstance(filtersList, title);
             }
         } else {
-            fragment = ChooserBrowseFragment.newInstance(filtersList);
+            fragment = ChooserBrowseFragment.newInstance(filtersList, title);
         }
 
         getSupportFragmentManager().beginTransaction().replace(R.id.content, fragment,
@@ -149,9 +191,10 @@ public class ChooserActivity extends FragmentActivity implements DrawerAdapter.D
             if (item.components != null) {
                 String[] filters = item.components.split(",");
                 filtersList.addAll(Arrays.asList(filters));
-                fragment = ChooserBrowseFragment.newInstance(filtersList);
+                String title = getTitleFromFilterList(this, filtersList);
+                fragment = ChooserBrowseFragment.newInstance(filtersList, title);
             } else if (item.id == R.id.theme_packs) {
-                fragment = ChooserBrowseFragment.newInstance(filtersList);
+                fragment = ChooserBrowseFragment.newInstance(filtersList, getString(R.string.app_name));
             }
 
             if (fragment != null) {

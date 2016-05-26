@@ -93,10 +93,11 @@ public class ChooserBrowseFragment extends Fragment
 
     private Point mMaxImageSize = new Point(); //Size of preview image in listview
 
-    public static ChooserBrowseFragment newInstance(ArrayList<String> componentFilters) {
+    public static ChooserBrowseFragment newInstance(ArrayList<String> componentFilters, String title) {
         ChooserBrowseFragment fragment = new ChooserBrowseFragment();
         Bundle args = new Bundle();
         args.putStringArrayList(ChooserActivity.EXTRA_COMPONENT_FILTER, componentFilters);
+        args.putString(ChooserActivity.EXTRA_TITLE, title);
         fragment.setArguments(args);
         return fragment;
     }
@@ -140,6 +141,8 @@ public class ChooserBrowseFragment extends Fragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        String title = getArguments().getString(ChooserActivity.EXTRA_TITLE, getString(R.string.app_name));
+        getActivity().setTitle(title);
         // Get memory class of this device, exceeding this amount will throw an
         // OutOfMemory exception.
         final int memClass = ((ActivityManager) getActivity().getSystemService(
