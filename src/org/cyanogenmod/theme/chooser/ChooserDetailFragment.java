@@ -211,7 +211,7 @@ public class ChooserDetailFragment extends Fragment
         mApply.setOnClickListener(new OnClickListener() {
             public void onClick(View view) {
                 ThemeChangeRequest request = getThemeChangeRequestForSelectedComponents();
-                mService.requestThemeChange(request, true);
+                mService.requestThemeChange(request, false);
                 refreshApplyButton();
             }
         });
