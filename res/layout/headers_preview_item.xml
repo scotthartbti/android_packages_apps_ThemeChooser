@@ -19,8 +19,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/offwhite"
-    android:paddingLeft="10dp"
-    android:paddingRight="10dp"
+    android:paddingStart="10dp"
+    android:paddingEnd="10dp"
     android:paddingTop="40dp">
     <ImageView
         android:id="@+id/header1"
